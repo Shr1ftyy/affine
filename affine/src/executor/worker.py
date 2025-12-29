@@ -56,14 +56,27 @@ class ExecutorWorker:
         self.executor_tasks = []
 
     async def _init_env_executor(self):
-        """Initialize environment executor in subprocess."""
+        """Initialize environment executor in subprocess.
+        
+        Reuses SDKEnvironment's _load_environment logic for consistency.
+        The executor mode is determined by affinetes_hosts.json configuration.
+        """
         if self.env_executor is not None:
             return
 
         try:
-            from affine.core.environments import create_environment
-            self.env_executor = create_environment(self.env)
-            safe_log(f"[{self.env}] Environment initialized in subprocess", "INFO")
+            from affine.core.environments import SDKEnvironment
+
+            self.env_executor = SDKEnvironment(self.env)
+            
+            # Log the mode being used
+            _, execution_mode = self.env_executor._get_hosts_and_mode()
+            safe_log(
+                f"[{self.env}] Environment initialized using {execution_mode} mode "
+                f"(via SDKEnvironment)",
+                "INFO"
+            )
+            
         except Exception as e:
             safe_log(f"[{self.env}] Failed to initialize environment: {e}", "ERROR")
             raise
@@ -191,10 +204,19 @@ class ExecutorWorker:
                     f"miner={miner_hotkey[:12]}..."
                 )
             
-            base_url = f"https://{chute_slug}.chutes.ai/v1"
+            # Create a minimal miner object for evaluate()
+            class MinimalMiner:
+                def __init__(self, model, slug, hotkey):
+                    self.model = model
+                    self.slug = chute_slug.replace('.chutes.ai', '').replace('https://', '')
+                    self.hotkey = hotkey
+                    self.revision = ""
+            
+            miner = MinimalMiner(model, chute_slug, miner_hotkey)
+            
+            # Call SDKEnvironment.evaluate() which returns a Result object
             result = await self.env_executor.evaluate(
-                model=model,
-                base_url=base_url,
+                miner=miner,
                 task_id=task_id,
             )
             
