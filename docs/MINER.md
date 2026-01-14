@@ -332,6 +332,21 @@ af commit --repo myuser/model --revision abc123 --chute-id xyz789 --coldkey mywa
 af commit --repo myuser/model --revision abc123 --chute-id xyz789
 ```
 
+### Q: How to check the rollouts?
+
+**A:** Each rollout is synced in the R2, so without the rate-limit of cortex, you can download each rollout from R2, which will fundamentally reinforce the transparent of affine.(plz notice R2 might have sync error, so cortex is the auth source)
+
+```bash
+# R2 Link
+https://pub-70dee0143439462a9928118289b0b9c7.r2.dev/
+
+#storage arch: 
+affine-sample-results/{hotkey}-{revision}/{env}/{task_id}.json
+
+#For Instance,
+https://pub-70dee0143439462a9928118289b0b9c7.r2.dev/5Ckqjq8Sskd2JNvG2NY1kKjF3ToDsvGY5FK5vTQZtrwwFrnR-4b38b269705a6b7594c3770e7ef778a40bfaa9da/CDE/2.json?include_extra=true
+```
+
 ## Related Documentation
 
 - [Main Documentation](../README.md) - Affine project overview
